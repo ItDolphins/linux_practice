@@ -1,0 +1,59 @@
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+
+int main(int argc,int **argv)
+{
+	DIR* dp;
+	struct dirent* dentry;
+	struct stat buf;
+	char* name;
+
+	if(argc != 2){ //원하는 디렉토리가 입력돼있지 않다면 exit
+		printf("usage: myls dirname \n");
+		exit(1);
+	}
+
+	if(!(dp = opendir(argv[1]))){ //원하는 경로의 디렉터리에 대한 opendir 수행
+		printf("opendir error.\n");
+		exit(2);
+	}
+
+	while(1){
+		dentry = readdir(dp); //dp에서 offset이 가르키는 디렉토리 항목 읽기
+		if(!dentry) break; //더 이상 읽을 디렉터리 항목이 없다면 break
+		
+		name = dentry->d_name; //이름 추출
+
+		lstat(name,&buf); //stat구조체에 해당 디렉토리 항목에 대한 정보 추출
+		
+		if(S_ISREG(buf.st_mode)) printf("- "); //파일 형태 검사
+		else if(S_ISDIR(buf.st_mode)) printf("d ");
+		else if(S_ISLNK(buf.st_mode)) printf("l ");
+
+		if(buf.st_mode & S_IRUSR) printf("r"); //파일 권한 검사
+		else printf("-");
+		if(buf.st_mode & S_IWUSR) printf("w");
+		else printf("-");
+		if(buf.st_mode & S_IXUSR) printf("x");
+		else printf("-");
+		if(buf.st_mode & S_IRGRP) printf("r");
+		else printf("-");
+		if(buf.st_mode & S_IWGRP) printf("w");
+		else printf("-");
+		if(buf.st_mode & S_IXGRP) printf("x");
+		else printf("-");
+		if(buf.st_mode & S_IROTH) printf("r");
+		else printf("-");
+		if(buf.st_mode & S_IWOTH) printf("w");
+		else printf("-");
+		if(buf.st_mode & S_IXOTH) printf("x");
+		else printf("-");
+
+		printf(" %d %s\n",buf.st_size,dentry->d_name); //파일 사이즈,이름 출력
+	}
+	return 0;
+}
+		
